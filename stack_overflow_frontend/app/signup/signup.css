@@ -1,0 +1,25 @@
+.Design {
+
+    width: 350px;
+    border: 1px solid rgb(241, 225, 225);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: white;
+}
+.cont{  
+    background-color: whitesmoke;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;  
+  height: 100vh; 
+}
+.btn{
+    margin-bottom: 10px;
+    width: 350px;
+}
