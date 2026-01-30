@@ -3,14 +3,20 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { UsersService } from './users.service';
 import { SignUp } from './dto/signup.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Login } from './dto/login.dto';
 
 @Controller('users')
 export class UsersController {
  constructor(private readonly usersService: UsersService) {}
 
-@Post()
+@Post('signup')
   createUser(@Body() createUserDto: SignUp) {
-    return this.usersService.createUser(createUserDto);
+    return this.usersService.signUp(createUserDto);
+  }
+
+  @Post('login')
+  loginUser(@Body() loginDto: Login) {
+    return this.usersService.login(loginDto);
   }
 
   @Get()
@@ -25,8 +31,8 @@ export class UsersController {
 
   
   @Patch(":id")
-  updateById(@Param("id") id:number , @Body() updateUserDto:UpdateUserDto){
-    return this.usersService.updateById(id , updateUserDto)
+  updateById(@Param("id") id:string , @Body() updateUserDto:UpdateUserDto){
+    return this.usersService.updateById(+id , updateUserDto)
   }
 
   @Delete(":id")

@@ -1,8 +1,8 @@
 /* eslint-disable prettier/prettier */
-// import { Question } from "src/questions/entities/question.entity";
-import { Entity, PrimaryGeneratedColumn, Column, 
-  // OneToMany,
-   CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Question } from "src/questions/entities/question.entity";
+import { Entity, PrimaryGeneratedColumn, Column,
+   CreateDateColumn, UpdateDateColumn, 
+   OneToMany} from "typeorm";
 
 @Entity("Users")
 export class Users {
@@ -15,8 +15,8 @@ export class Users {
   @Column()
   password: string;
 
-  // @OneToMany(() => Question, (question) => question.users)
-  // question: Question[];
+  @OneToMany(() => Question, (question) => question.user)
+  questions: Question[];
 
   @CreateDateColumn()
   createdAt:Date;

@@ -2,12 +2,13 @@
 
 import { Box, Button, Typography, InputBase, IconButton } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import AskQuestionModal from "./components/askQuestion";
 
 export default function Home() {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   return (
     <>
@@ -96,7 +97,45 @@ export default function Home() {
           </Button>
         </Box>
       </Box>
- 
+
+  <Box sx={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
+        <Box
+          sx={{
+            width: 200,
+            borderRight: "1px solid #ddd",
+            p: 2,
+          }}
+        >
+          <Typography sx={{ mb: 2, cursor: "pointer",fontWeight: "bold" }}>Home</Typography>
+          <Typography sx={{ mb: 2, cursor: "pointer", fontWeight: "bold" }}>
+            Questions
+          </Typography>
+        </Box>
+
+        <Box sx={{ flex: 1, p: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+            }}
+          >
+            <Typography variant="h5">Newest Questions</Typography>
+
+            <Button
+              variant="contained"
+              onClick={() => setOpen(true)}
+            >
+              Ask Question
+            </Button>
+          </Box>
+
+        Questions List
+        </Box>
+      </Box>
+
+      <AskQuestionModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }

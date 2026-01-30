@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
+import { Tag } from "src/tags/entities/tag.entity";
 import { Users } from "src/users/entities/user.entity";
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable } from "typeorm";
 
 @Entity("Questions")
 export class Question {
@@ -16,10 +17,15 @@ export class Question {
   @Column()
   description: string;
 
-  @ManyToOne(() => Users, {cascade : true})
-  users: Users[];
+  @ManyToOne(() => Users, (user)=>user.questions, {
+    cascade:['insert'],
+    onDelete : "CASCADE"})
+  user: Users;
 
-  @Column()
-  tag:string
-
+ @ManyToMany(() => Tag, (tag) => tag.questions, {
+    cascade: ['insert'], 
+  })
+  @JoinTable()
+  tags: Tag[];
 }
+
