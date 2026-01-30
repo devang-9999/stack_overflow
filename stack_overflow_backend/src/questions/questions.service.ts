@@ -17,8 +17,9 @@ export class QuestionsService {
   ) { }
 
 
-  
+
   async createQuestion(createQuestionDto: CreateQuestionDto) {
+    console.log(createQuestionDto, 'iojk')
     const { userId, tags, ...questionData } = createQuestionDto;
 
     const existingTags = await this.tagsRepository.find({
@@ -35,7 +36,7 @@ export class QuestionsService {
 
 
     const allTags = [...existingTags, ...newTags];
-    
+
 
     const question = this.questionsRepository.create({
       ...questionData,
@@ -51,12 +52,11 @@ export class QuestionsService {
     });
   }
 
-  getAllQuestions() {
-    return this.questionsRepository.find(
-      {
-        relations: ['user', 'tags'],
-      }
-    );
+  async findAll() {
+    return await this.questionsRepository.find({
+      relations: ['user', 'tags'],
+      order: { id: 'DESC' }
+    });
   }
 
 
@@ -66,8 +66,8 @@ export class QuestionsService {
       throw new NotFoundException("Question not found");
     }
     return this.questionsRepository.findOne({
-      where :{id:id},
-     relations: ['user', 'tags'],
+      where: { id: id },
+      relations: ['user', 'tags'],
     })
   }
 

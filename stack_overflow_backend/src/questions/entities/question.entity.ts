@@ -1,7 +1,8 @@
 /* eslint-disable prettier/prettier */
+import { Answers } from "src/answers/entities/answer.entity";
 import { Tag } from "src/tags/entities/tag.entity";
 import { Users } from "src/users/entities/user.entity";
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany } from "typeorm";
 
 @Entity("Questions")
 export class Question {
@@ -27,5 +28,8 @@ export class Question {
   })
   @JoinTable()
   tags: Tag[];
+
+  @OneToMany(() => Answers, (answers) => answers.question)
+  answers: Answers[];
 }
 

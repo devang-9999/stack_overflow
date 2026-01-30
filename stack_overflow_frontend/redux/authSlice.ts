@@ -34,14 +34,10 @@ const initialState: AuthState = {
       : null,
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = "http://localhost:5000";
 
 
-export const signupThunk = createAsyncThunk<
-  User,
-  SignupPayload,
-  { rejectValue: string }
->("auth/signup", async (data, { rejectWithValue }) => {
+export const signupThunk = createAsyncThunk("auth/signup", async (data :SignupPayload, { rejectWithValue }) => {
   try {
     const res = await axios.post(`${API_URL}/users/signup`, data);
     return res.data;
@@ -54,11 +50,7 @@ export const signupThunk = createAsyncThunk<
 });
 
 
-export const loginThunk = createAsyncThunk<
-  User,
-  LoginPayload,
-  { rejectValue: string }
->("auth/login", async (data, { rejectWithValue }) => {
+export const loginThunk = createAsyncThunk("auth/login", async (data:LoginPayload, { rejectWithValue }) => {
   try {
     const res = await axios.post(`${API_URL}/users/login`, data);
     return res.data;
@@ -95,7 +87,7 @@ const authSlice = createSlice({
       })
       .addCase(signupThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Signup failed";
+        state.error = (action.payload as string) || "Signup failed";
       })
 
       .addCase(loginThunk.pending, (state) => {
@@ -109,7 +101,7 @@ const authSlice = createSlice({
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Login failed";
+        state.error = (action.payload as string) || "Login failed";
       });
   },
 });

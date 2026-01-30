@@ -4,6 +4,8 @@ import * as dotenv from 'dotenv';
 import { Users } from 'src/users/entities/user.entity';
 import { Tag } from 'src/tags/entities/tag.entity';
 import { Question } from 'src/questions/entities/question.entity';
+import { Answers } from 'src/answers/entities/answer.entity';
+import { Vote } from 'src/votes/entities/vote.entity';
 
 
 
@@ -18,7 +20,7 @@ const rawDataSourceOptions = {
       database: process.env.DB_NAME,
       synchronize: true,
       entities: [Users,
-            Tag, Question],
+            Tag, Question,Answers,Vote],
       migrations: [__dirname + "../database/migrations/*.ts"],
 };
 

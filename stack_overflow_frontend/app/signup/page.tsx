@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -63,26 +63,32 @@ export default function Register() {
   });
 
   const onSubmit = (data: RegisterFormData) => {
-    dispatch(signupThunk(data));
+    dispatch(signupThunk({
+      email:data.email,
+      password:data.password
+    }));
   };
-
-  const handleGoogleSignup = async () => {
+  const handleGoogleSignUp = async () => {
     try {
       await signInWithPopup(auth, provider);
-      setSnackbarOpen(true);
-      setTimeout(() => router.push("/login"), 800);
-    } catch {
-      setSnackbarOpen(true);
+      alert("User Logged in successfully");
+      setTimeout(() => redirect("/login"), 500)
+
+    }
+    catch {
+      alert("Google sign in failed")
     }
   };
 
-  const handleGithubSignup = async () => {
+  const handleGithubSignUp = async () => {
     try {
       await signInWithPopup(auth, gitProvider);
-      setSnackbarOpen(true);
-      setTimeout(() => router.push("/login"), 800);
-    } catch {
-      setSnackbarOpen(true);
+      alert("User Logged in successfully");
+      setTimeout(() => redirect("/login"), 500)
+
+    }
+    catch {
+      alert("Github sign up failed")
     }
   };
 
@@ -114,7 +120,7 @@ export default function Register() {
           fullWidth
           variant="contained"
           sx={{ mt: 3, mb: 2, backgroundColor: "white", color: "black" }}
-          onClick={handleGoogleSignup}
+          onClick={handleGoogleSignUp}
         >
           <FcGoogle style={{ fontSize: 24, marginRight: 10 }} />
           Sign up with Google
@@ -124,7 +130,7 @@ export default function Register() {
           fullWidth
           variant="contained"
           sx={{ mb: 2, backgroundColor: "black" }}
-          onClick={handleGithubSignup}
+          onClick={handleGithubSignUp}
         >
           <FaGithub style={{ fontSize: 24, marginRight: 10 }} />
           Sign up with GitHub

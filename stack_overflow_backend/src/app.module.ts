@@ -8,6 +8,8 @@ import { dataSourceOptions } from './database/data_source/data_source';
 import { UsersModule } from './users/users.module';
 import { TagsModule } from './tags/tags.module';
 import { QuestionsModule } from './questions/questions.module';
+import { AnswerModule } from './answers/answers.module';
+import { VotesModule } from './votes/votes.module';
 
 
 @Module({
@@ -15,7 +17,9 @@ import { QuestionsModule } from './questions/questions.module';
     TypeOrmModule.forRoot({...dataSourceOptions}),
     UsersModule,
     TagsModule,
-    QuestionsModule
+    QuestionsModule,
+    AnswerModule,
+    VotesModule
   ],
   controllers: [AppController],
   providers: [AppService],

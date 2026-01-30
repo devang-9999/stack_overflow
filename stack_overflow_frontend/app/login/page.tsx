@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -62,28 +62,36 @@ export default function Login() {
   });
 
   const onSubmit = (data: LoginFormData) => {
-    dispatch(loginThunk(data));
+    dispatch(loginThunk({
+       email: data.email,
+       password: data.password,
+    }));
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignUp = async () => {
     try {
       await signInWithPopup(auth, provider);
-      setSnackbarOpen(true);
-      setTimeout(() => router.push("/"), 800);
-    } catch {
-      setSnackbarOpen(true);
+      alert("User Logged in successfully");
+      setTimeout(() => redirect("/"), 500)
+
+    }
+    catch {
+      alert("Google sign in failed")
     }
   };
 
-  const handleGithubLogin = async () => {
+  const handleGithubSignUp = async () => {
     try {
       await signInWithPopup(auth, gitProvider);
-      setSnackbarOpen(true);
-      setTimeout(() => router.push("/"), 800);
-    } catch {
-      setSnackbarOpen(true);
+      alert("User Logged in successfully");
+      setTimeout(() => redirect("/"), 500)
+
+    }
+    catch {
+      alert("Github sign up failed")
     }
   };
+
 
   useEffect(() => {
     if (error) {
@@ -95,8 +103,8 @@ export default function Login() {
       setSnackbarOpen(true);
       reset();
       setTimeout(() => {
-        router.push("/");
-      }, 800);
+        redirect("/");
+      }, 300);
     }
   }, [error, user, reset, router]);
 
@@ -108,13 +116,13 @@ export default function Login() {
         width={300}
       />
 
-      {/* OAuth buttons */}
+
       <div className="btn">
         <Button
           fullWidth
           variant="contained"
           sx={{ mt: 3, mb: 2, backgroundColor: "white", color: "black" }}
-          onClick={handleGoogleLogin}
+          onClick={handleGoogleSignUp}
         >
           <FcGoogle style={{ fontSize: 24, marginRight: 10 }} />
           Sign in with Google
@@ -124,7 +132,7 @@ export default function Login() {
           fullWidth
           variant="contained"
           sx={{ mb: 2, backgroundColor: "black" }}
-          onClick={handleGithubLogin}
+          onClick={handleGithubSignUp}
         >
           <FaGithub style={{ fontSize: 24, marginRight: 10 }} />
           Sign in with GitHub
@@ -174,7 +182,7 @@ export default function Login() {
 
           <Typography align="center" sx={{ mt: 2 }}>
             Don’t have an account?{" "}
-            <Link href="/signup" style={{ color: "#1976d2" }}>
+            <Link href="/signup" style={{ color: "#1976d2" , textDecoration:"none"}}>
               Sign up
             </Link>
           </Typography>

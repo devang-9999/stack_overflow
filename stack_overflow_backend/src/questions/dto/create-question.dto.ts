@@ -1,4 +1,5 @@
-import { IsArray, IsString, ArrayMinSize } from 'class-validator';
+/* eslint-disable prettier/prettier */
+import { IsArray, IsString, ArrayMinSize, IsInt, IsOptional } from 'class-validator';
 
 export class CreateQuestionDto {
   @IsString()
@@ -15,5 +16,7 @@ export class CreateQuestionDto {
   @IsString({ each: true })
   tags: string[];
 
+  @IsOptional()
+  @IsInt()
   userId: number;
 }

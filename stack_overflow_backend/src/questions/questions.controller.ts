@@ -13,7 +13,7 @@ export class QuestionsController {
 
   @Get()
   findAll() {
-    return this.questionsService.getAllQuestions();
+    return this.questionsService.findAll();
   }
 
   @Get(':id')
