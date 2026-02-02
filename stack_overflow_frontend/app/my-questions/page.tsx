@@ -10,6 +10,7 @@ import {
 
 import { Box, Typography, Button } from "@mui/material";
 import Link from "next/link";
+// import AnswerList from "../components/answerList";
 
 export default function MyQuestionsPage() {
   const dispatch = useAppDispatch();
@@ -47,8 +48,16 @@ export default function MyQuestionsPage() {
               </h3>
             </Link>
 
-            <p>{q.description}</p>
-
+            <div
+              dangerouslySetInnerHTML={{
+                __html: q.description,
+              }}
+            />
+            {/* <Box>
+              <AnswerList
+                questionId={q.id}
+                userId={user?.id} />
+            </Box> */}
             <Button
               variant="outlined"
               color="warning"

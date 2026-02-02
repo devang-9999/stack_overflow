@@ -18,6 +18,7 @@ export interface User {
   id: number;
   email: string;
   authType: "custom" | "firebase" | null;
+
 }
 
 interface AuthState {

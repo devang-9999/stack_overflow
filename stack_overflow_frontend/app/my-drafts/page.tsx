@@ -41,7 +41,11 @@ export default function MyDraftsPage() {
             sx={{ border: "1px solid #aaa", p: 2, mb: 2 }}
           >
             <h3>{q.title}</h3>
-            <p>{q.description}</p>
+            <div
+              dangerouslySetInnerHTML={{
+                __html: q.description,
+              }}
+            />
 
             <Button
               variant="contained"

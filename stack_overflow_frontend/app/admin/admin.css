@@ -88,10 +88,11 @@ body {
 }
 
 .question-card {
-  border: 1px solid #ccc;
+  border: 2px solid #000000;
   border-radius:5px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin: 16px;
+    background-color: #ffffff;
 }
 
 .question-card h3 {

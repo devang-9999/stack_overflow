@@ -26,8 +26,9 @@ import {
   MenuSelectTextAlign,
 } from 'mui-tiptap';
 import { useRouter } from 'next/navigation';
+import AnswerList from '@/app/components/answerList';
 
-export default function ProductDetailPage() {
+export default function QuestionsForId() {
   const router = useRouter();
   const { id } = useParams();
   const dispatch = useAppDispatch();
@@ -51,7 +52,6 @@ const fetchMyAnswer = async () => {
          `http://localhost:5000/answers/question/${id}?userId=${user.id}`
 
   );
-
   const myAnswer = res.data.find(
     (a: any) => a.userId === user.id
   );
@@ -94,6 +94,7 @@ useEffect(() => {
     }
   };
 
+
   if (!question) {
     return <p>Loading question...</p>;
   }
@@ -108,7 +109,6 @@ useEffect(() => {
           <strong>Author:</strong> {question.user?.email}
         </p>
       </Box>
-
      {hasAnswered && (
   <Box sx={{ mb: 1 }}>
     <Alert severity="info">

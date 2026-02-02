@@ -16,14 +16,43 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAppSelector } from '@/redux/hooks';
 
-export default function AnswerList({   questionId,
-  userId, }: {  questionId: number;
-  userId: number; }) {
+export default function AnswerList({ questionId,
+  userId, }: {
+    questionId: number;
+    userId: number;
+  }) {
   const { user } = useAppSelector((s: any) => s.auth);
 
   const [answers, setAnswers] = useState<any[]>([]);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyTexts, setReplyTexts] = useState<Record<number, string>>({});
+  // const [success, setSuccess] = useState<boolean>()
+
+
+
+  // const markValid = async() => {
+  //    const res = await axios.patch(`http://localhost:5000/answers/${questionId}/validate`)
+
+  //    if(res){
+  //        console.log(res.data)
+  //     setSuccess(true)
+  //    }
+  //    else{
+  //     alert(`Answer for question ${questionId} cannot be changed`)
+  //    }
+
+  // }
+
+
+  // const markInValid = async() => {
+  //    const res = await axios.patch(`http://localhost:5000/answers/${questionId}/inValidate`)
+  //    if(res){
+  //        console.log(res.data)
+  //     setSuccess(false)}
+  //     else{
+  //         alert(`Answer for question ${questionId} cannot be changed`)
+  //     }
+  // }
 
   const refreshAnswers = async () => {
     const res = await axios.get(
@@ -61,7 +90,7 @@ export default function AnswerList({   questionId,
       value,
     });
 
-    refreshAnswers(); 
+    refreshAnswers();
   };
 
   const submitReply = async (parentAnswerId: number) => {
@@ -79,7 +108,7 @@ export default function AnswerList({   questionId,
 
     setReplyTexts((prev) => ({ ...prev, [parentAnswerId]: '' }));
     setReplyingTo(null);
-    refreshAnswers(); 
+    refreshAnswers();
   };
 
   return (
@@ -92,11 +121,28 @@ export default function AnswerList({   questionId,
           sx={{
             p: 2,
             mb: 2,
-            borderLeft: '4px solid #1976d2',
+            borderLeft: '4px solid blue',
             background: '#fafafa',
           }}
         >
-          <div dangerouslySetInnerHTML={{ __html: answer.answer }} />
+          <Box>
+            <div dangerouslySetInnerHTML={{ __html: answer.answer }} />
+
+            {/* {success?(
+                        <Button variant="contained" color="error" sx={{mt:3 , mb:3 ,size:"small"}} onClick={()=>{
+            markInValid()
+          }}>
+            Mark It Invalid
+          </Button>
+            ): (
+          <Button variant="contained" color="success" sx={{mt:3 , mb:3 ,size:"small"}} onClick={()=>{
+            markValid()
+          }}>
+            Mark Valid
+          </Button>
+            )} */}
+
+          </Box>
 
           <Stack direction="row" spacing={1} alignItems="center">
             <IconButton
@@ -159,12 +205,46 @@ export default function AnswerList({   questionId,
                 mt: 1,
                 ml: 4,
                 p: 1,
-                borderLeft: '2px solid #ccc',
-                background: '#fff',
+                borderLeft: '2px solid silver',
+                background: 'white',
               }}
             >
+              <Button
+                size="small"
+                onClick={() =>
+                  setReplyingTo(replyingTo === reply.id ? null : reply.id)
+                }
+              >
+                Reply
+              </Button>
               <div dangerouslySetInnerHTML={{ __html: reply.answer }} />
+              {replyingTo === reply.id && (
+                <Box sx={{ mt: 1, ml: 3 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    multiline
+                    rows={3}
+                    value={replyTexts[reply.id] ?? ''}
+                    onChange={(e) =>
+                      setReplyTexts((prev) => ({
+                        ...prev,
+                        [reply.id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Write a reply..."
+                  />
 
+                  <Button
+                    size="small"
+                    sx={{ mt: 1 }}
+                    onClick={() => submitReply(reply.id)}
+                    disabled={!replyTexts[reply.id]?.trim()}
+                  >
+                    Submit Reply
+                  </Button>
+                </Box>
+              )}
               <Stack direction="row" spacing={1}>
                 <IconButton
                   size="small"

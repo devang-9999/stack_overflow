@@ -9,6 +9,7 @@ interface Tag {
   name: string;
 }
 
+
 interface Question {
   id: number;
   title: string;
@@ -73,6 +74,19 @@ export const fetchQuestionsThunkById = createAsyncThunk(
 
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message || "Failed to fetch questions");
+    }
+  }
+);
+
+export const fetchAnswersThunkByQuestionId = createAsyncThunk(
+  "answer/fetchByQuestionId",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      console.log(id, "question id to fetch answers")
+      const res = await axios.get(`${API_URL}/answers/question/${id}`);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message || "Failed to fetch answers");
     }
   }
 );

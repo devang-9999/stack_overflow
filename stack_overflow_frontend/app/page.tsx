@@ -71,7 +71,9 @@ export default function Home() {
 
   return (
     <>
-      <Box className="navbar">
+      <Box className="navbar" 
+      // sx={{display: 'flex', justifyContent: 'space-between'}}
+      >
         <Box className="logo" onClick={() => router.push("/")}>
           <img
             src="https://www.logo.wine/a/logo/Stack_Overflow/Stack_Overflow-Logo.wine.svg"
@@ -159,15 +161,16 @@ export default function Home() {
 
       <Box className="main-layout">
         <Box className="sidebar">
-          <Typography className="sidebar-item">
+          <Typography className="sidebar-item" style={{marginBottom:"15px" ,marginTop:"15px"}}>
             <FaHome /> Home
           </Typography>
 
-          <Typography className="sidebar-item">
+          <Typography className="sidebar-item" style={{marginBottom:"15px"}}>
             <FaQuestionCircle /> Questions
           </Typography>
 
           <Typography
+          style={{marginBottom:"15px"}}
             className="sidebar-item"
             onClick={() => router.push("/my-questions")}
           >
@@ -175,6 +178,7 @@ export default function Home() {
           </Typography>
 
           <Typography
+          style={{marginBottom:"15px"}}
             className="sidebar-item"
             onClick={() => router.push("/my-drafts")}
           >
@@ -208,7 +212,7 @@ export default function Home() {
                 key={question.id}
                 className="question-card"
               >
-                <Link href={`/questions/${question.id}`}>
+                <Link style={{textDecoration:"none"}} href={`/questions/${question.id}`}>
                   <h3>{question.title}</h3>
                 </Link>
 

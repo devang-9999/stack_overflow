@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useEffect, useState } from "react";
+import axios from "axios";
+
 import {
   Modal,
   Box,
@@ -8,27 +11,42 @@ import {
   TextField,
   Button,
   Autocomplete,
+  IconButton,
 } from "@mui/material";
+
+import CodeIcon from "@mui/icons-material/Code";
+
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addQuestionThunk } from "../../redux/questionsSlice";
+
 import StarterKit from "@tiptap/starter-kit";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+
+import { createLowlight, common } from "lowlight";
+
 import {
   MenuButtonBold,
   MenuButtonItalic,
+  MenuButtonOrderedList,
+  MenuButtonStrikethrough,
+  MenuButtonUnderline,
   MenuControlsContainer,
   MenuDivider,
   MenuSelectHeading,
+  MenuSelectTextAlign,
   RichTextEditor,
+  useRichTextEditorContext,
 } from "mui-tiptap";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import TextAlign from "@tiptap/extension-text-align";
+
+const lowlight = createLowlight(common);
 
 const stripHtml = (html: string) =>
   html.replace(/<[^>]*>/g, "").trim();
-
 
 const questionSchema = z.object({
   title: z
@@ -37,16 +55,15 @@ const questionSchema = z.object({
     .max(55, "Title cannot exceed 55 characters"),
 
   description: z
-  .string()
-  .refine(
-    (val) => stripHtml(val).length <= 2000,
-    "Description can have max 2000 characters"
-  )
-  .refine(
-    (val) => stripHtml(val).length > 0,
-    "Description cannot be empty"
-  ),
-
+    .string()
+    .refine(
+      (val) => stripHtml(val).length <= 2000,
+      "Description can have max 2000 characters"
+    )
+    .refine(
+      (val) => stripHtml(val).length > 0,
+      "Description cannot be empty"
+    ),
 
   type: z.string().min(1, "Type is required"),
 
@@ -62,24 +79,48 @@ export default function AskQuestionModal({
   open: boolean;
   onClose: () => void;
 }) {
+
+  const EditorToolbar = () => {
+    const editor = useRichTextEditorContext();
+    if (!editor) return null;
+
+    return (
+      <MenuControlsContainer>
+        <MenuSelectHeading />
+        <MenuDivider />
+        <MenuButtonBold />
+        <MenuButtonItalic />
+        <IconButton
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          color={editor.isActive("codeBlock") ? "primary" : "default"}
+        >
+          <CodeIcon />
+        </IconButton>
+        <MenuButtonUnderline />
+        <MenuButtonStrikethrough />
+        <MenuDivider />
+        <MenuButtonOrderedList />
+        <MenuDivider />
+        <MenuSelectTextAlign />
+      </MenuControlsContainer>
+    );
+  };
+
+
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: any) => state.auth.user);
 
   const [tagOptions, setTagOptions] = useState<string[]>([]);
 
   useEffect(() => {
-
-const fetchTags = async () => {
-  try {
-    const res = await axios.get("http://localhost:5000/tags");
-
-    const names = res.data.map((tag: any) => tag.name);
-
-    setTagOptions(names);
-  } catch (err) {
-    console.error("Failed to load tags", err);
-  }
-};
+    const fetchTags = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/tags");
+        setTagOptions(res.data.map((tag: any) => tag.name));
+      } catch (err) {
+        console.error("Failed to load tags", err);
+      }
+    };
 
     fetchTags();
   }, []);
@@ -119,7 +160,7 @@ const fetchTags = async () => {
     <Modal open={open} onClose={onClose}>
       <Box
         sx={{
-          width: 500,
+          width: 600,
           bgcolor: "white",
           p: 3,
           borderRadius: 2,
@@ -134,7 +175,6 @@ const fetchTags = async () => {
         </Typography>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-      
           <TextField
             fullWidth
             label="Title"
@@ -147,34 +187,26 @@ const fetchTags = async () => {
           <Controller
             name="description"
             control={control}
-            render={({ field: { onChange, value }, fieldState }) => (
+            render={({ field }) => (
               <RichTextEditor
-                sx={{
-                  mt: 2,
-                  mb: 2,
-                  border: fieldState.error
-                    ? "1px solid red"
-                    : "1px solid #ddd",
-                }}
+                sx={{ mt: 2, mb: 2 }}
                 immediatelyRender={false}
-                extensions={[StarterKit]}
-                content={value || "<p></p>"}
+                extensions={[
+                  StarterKit.configure({ codeBlock: false }),
+                  CodeBlockLowlight.configure({ lowlight }),
+                  TextAlign.configure({
+                    types: ['heading', 'paragraph'],
+                  }),
+                ]}
+                content={field.value || "<p></p>"}
                 onUpdate={({ editor }) =>
-                  onChange(editor.getHTML())
+                  field.onChange(editor.getHTML())
                 }
-                renderControls={() => (
-                  <MenuControlsContainer>
-                    <MenuSelectHeading />
-                    <MenuDivider />
-                    <MenuButtonBold />
-                    <MenuButtonItalic />
-                  </MenuControlsContainer>
-                )}
+                renderControls={() => <EditorToolbar />}
               />
             )}
           />
 
-  
           <TextField
             fullWidth
             label="Type (e.g. backend, frontend)"
@@ -184,7 +216,6 @@ const fetchTags = async () => {
             helperText={errors.type?.message}
           />
 
-   
           <Controller
             name="tags"
             control={control}
@@ -222,5 +253,3 @@ const fetchTags = async () => {
     </Modal>
   );
 }
-
-
