@@ -10,7 +10,6 @@ import {
 
 import { Box, Typography, Button } from "@mui/material";
 import Link from "next/link";
-// import AnswerList from "../components/answerList";
 
 export default function MyQuestionsPage() {
   const dispatch = useAppDispatch();
@@ -18,11 +17,12 @@ export default function MyQuestionsPage() {
   const user = useAppSelector((s: any) => s.auth.user);
   const { userPublished } = useAppSelector((s: any) => s.question);
 
+  /* -------------------- FETCH USER QUESTIONS -------------------- */
   useEffect(() => {
     if (user?.id) {
       dispatch(fetchUserPublishedThunk(user.id));
     }
-  }, [user, dispatch]);
+  }, [user?.id, dispatch]);
 
   if (!user) {
     return <Typography>Please login first</Typography>;
@@ -40,41 +40,64 @@ export default function MyQuestionsPage() {
         userPublished.map((q: any) => (
           <Box
             key={q.id}
-            sx={{ border: "1px solid #ccc", p: 2, mb: 2 }}
+            sx={{
+              border: "1px solid #ccc",
+              p: 2,
+              mb: 2,
+              borderRadius: 1,
+            }}
           >
-            <Link href={`/questions/${q.id}`}>
-              <h3 style={{ color: "blue", cursor: "pointer" }}>
+            {/* TITLE */}
+            <Link href={`/questions/${q.id}`} style={{ textDecoration: "none" }}>
+              <Typography
+                variant="h6"
+                sx={{ color: "blue", cursor: "pointer" }}
+              >
                 {q.title}
-              </h3>
+              </Typography>
             </Link>
 
-            <div
-              dangerouslySetInnerHTML={{
-                __html: q.description,
-              }}
-            />
-            {/* <Box>
-              <AnswerList
-                questionId={q.id}
-                userId={user?.id} />
-            </Box> */}
-            <Button
-              variant="outlined"
-              color="warning"
-              size="small"
-              sx={{ mt: 1 }}
-              onClick={() =>
-                dispatch(
-                  updateQuestionStatusThunk({
-                    questionId: q.id,
-                    userId: user.id,
-                    status: "draft",
-                  })
-                )
-              }
-            >
-              Move to Draft
-            </Button>
+            {/* VERIFIED BADGE */}
+            {q.acceptedAnswer && (
+              <Typography
+                sx={{
+                  color: "green",
+                  fontWeight: "bold",
+                  mt: 1,
+                }}
+              >
+                ✔ Verified (Accepted Answer)
+              </Typography>
+            )}
+
+            {/* DESCRIPTION */}
+            <Box sx={{ mt: 1 }}>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: q.description,
+                }}
+              />
+            </Box>
+
+            {/* ACTIONS */}
+            <Box sx={{ mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="warning"
+                size="small"
+                onClick={() =>
+                  dispatch(
+                    updateQuestionStatusThunk({
+                      questionId: q.id,
+                      userId: user.id,
+                      status: "draft",
+                    })
+                  )
+                }
+              >
+                Move to Draft
+              </Button>
+            </Box>
           </Box>
         ))
       )}

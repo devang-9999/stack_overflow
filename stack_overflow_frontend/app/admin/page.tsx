@@ -16,19 +16,20 @@ import SearchIcon from "@mui/icons-material/Search";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import axios from "axios";
-import "./admin.css"
 import { fetchQuestionsThunk } from "@/redux/questionsSlice";
+import "./admin.css";
 
-export default function Home() {
+export default function AdminDashboard() {
     const dispatch = useAppDispatch();
-
     const { questions } = useAppSelector((state: any) => state.question);
+    const currentUser = useAppSelector((state: any) => state.auth.user);
+
     const [search, setSearch] = useState("");
-    const CurrentUser = useAppSelector((state: any) => state.auth.user);
-    console.log(CurrentUser,"ljsjssk")
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [tagOptions, setTagOptions] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [answersMap, setAnswersMap] = useState<Record<number, any[]>>({});
+
     const questionsPerPage = 5;
     const totalPages = Math.ceil(questions.length / questionsPerPage);
     const startIndex = (currentPage - 1) * questionsPerPage;
@@ -36,35 +37,52 @@ export default function Home() {
         startIndex,
         startIndex + questionsPerPage
     );
+
+    /* ---------------- LOAD TAGS ---------------- */
     useEffect(() => {
-        axios.get("http://localhost:5000/tags").then((res: any) => {
+        axios.get("http://localhost:5000/tags").then((res) => {
             setTagOptions(res.data.map((t: any) => t.name));
         });
     }, []);
 
+    /* ---------------- LOAD QUESTIONS ---------------- */
     useEffect(() => {
         dispatch(fetchQuestionsThunk());
     }, [dispatch]);
 
-    // useEffect(() => {
-    //       const fetchUsers = async () => {
-    //     const res = await axios.get("http://localhost:5000/users");
-    //     setUsers(res.data);
-    //     console.log("Users:", Users);
-    // }
-    // fetchUsers();
-    // }, [dispatch]);
+    /* ---------------- LOAD ANSWERS ---------------- */
+    const loadAnswers = async (questionId: number) => {
+        const res = await axios.get(
+            `http://localhost:5000/answers/admin/question/${questionId}`
+        );
 
+        setAnswersMap((prev) => ({
+            ...prev,
+            [questionId]: res.data,
+        }));
+    };
+
+    /* ---------------- BAN / UNBAN USER ---------------- */
+    const toggleBanUser = async (user: any) => {
+        if (user.isBanned) {
+            await axios.patch(
+                `http://localhost:5000/users/unban/${user.id}`
+            );
+            alert("User unbanned");
+        } else {
+            await axios.patch(
+                `http://localhost:5000/users/ban/${user.id}`
+            );
+            alert("User banned");
+        }
+
+        dispatch(fetchQuestionsThunk());
+    };
 
     return (
         <>
-            {/* {Users.map((user: any)=>(
-            <Box key={user.id} sx={{border:"1px solid black", margin:"10px", padding:"10px", borderRadius:"5px", backgroundColor:"#f9f9f9"}}>
-                <Typography variant="h6">User ID: {user.id}</Typography>
-                <Typography variant="body1">Email: {user.email}</Typography>
-            </Box>
-        ))} */}
-            <Box className="navbar" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            {/* ---------------- NAVBAR ---------------- */}
+            <Box className="navbar">
                 <img
                     src="https://www.logo.wine/a/logo/Stack_Overflow/Stack_Overflow-Logo.wine.svg"
                     alt="Stack Overflow"
@@ -72,11 +90,9 @@ export default function Home() {
                     height={50}
                 />
 
-
                 <Box className="search-box">
                     <InputBase
                         placeholder="Search by title..."
-                        sx={{ flex: 1 }}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -116,12 +132,10 @@ export default function Home() {
                 />
             </Box>
 
+            {/* ---------------- QUESTIONS ---------------- */}
             {currentQuestions.length ? (
                 currentQuestions.map((question: any) => (
-                    <Box
-                        key={question.id}
-                        className="question-card"
-                    >
+                    <Box key={question.id} className="question-card">
                         <h3>{question.title}</h3>
 
                         <div
@@ -130,53 +144,115 @@ export default function Home() {
                             }}
                         />
 
-                        <div style={{ display: 'flex', gap: '10px', flexDirection: "column" }}>
-                            <div>
-                                <strong>Author:</strong>{" "}
-                                {question.user?.email || question.user?.id}
-                            </div>
-                            <br />
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                            onClick={() => loadAnswers(question.id)}
+                        >
+                            Load Answers
+                        </Button>
 
-                            <div>
+                        {/* ---------------- ANSWERS ---------------- */}
+                        <Box sx={{ mt: 2, pl: 2, borderLeft: "3px solid #ddd" }}>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                                Answers
+                            </Typography>
+
+                            {!answersMap[question.id] && (
+                                <Typography variant="body2" color="text.secondary">
+                                    Click Load Answers to view answers
+                                </Typography>
+                            )}
+
+                            {answersMap[question.id]?.length === 0 && (
+                                <Typography>No answers</Typography>
+                            )}
+
+                            {answersMap[question.id]?.map((answer: any) => (
+                                <Box
+                                    key={answer.id}
+                                    sx={{
+                                        mt: 1,
+                                        p: 1,
+                                        background: answer.isDeleted
+                                            ? "#ffe6e6"
+                                            : "#f9f9f9",
+                                        borderRadius: 1,
+                                    }}
+                                >
+                                    <div
+                                        dangerouslySetInnerHTML={{
+                                            __html: answer.answer,
+                                        }}
+                                    />
+
+                                    <Typography variant="caption">
+                                        User ID: {answer.userId}
+                                    </Typography>
+
+                                    {/* SOFT DELETE / RESTORE */}
+                                    <Button
+                                        size="small"
+                                        sx={{ mt: 1 }}
+                                        color={answer.isDeleted ? "success" : "error"}
+                                        variant="contained"
+                                        onClick={async () => {
+                                            await axios.patch(
+                                                `http://localhost:5000/answers/${answer.id}/admin-toggle-delete`
+                                            );
+                                            loadAnswers(question.id); // reload admin answers
+                                        }}
+                                    >
+                                        {answer.isDeleted ? "Restore Answer" : "Delete Answer"}
+                                    </Button>
+
+                                </Box>
+                            ))}
+                        </Box>
+
+                        {/* ---------------- AUTHOR + TAGS ---------------- */}
+                        <Box sx={{ mt: 2 }}>
+                            <Typography>
+                                <strong>Author:</strong>{" "}
+                                {question.user?.email}
+                            </Typography>
+
+                            <Typography sx={{ mt: 1 }}>
                                 <strong>Tags:</strong>{" "}
-                                {question.tags.map((tag: any, index: number) => (
+                                {question.tags.map((tag: any, i: number) => (
                                     <span key={tag.id}>
                                         {tag.name}
-                                        {index < question.tags.length - 1 && ", "}
+                                        {i < question.tags.length - 1 && ", "}
                                     </span>
                                 ))}
-                            </div>
+                            </Typography>
 
-
-                            {CurrentUser.isBanned ? (<Button variant="contained" onClick={async () => {
-                                await axios.patch(`http://localhost:5000/users/ban/${question.user.id}`);
-                                alert("User Banned Successfully");
-                            }}>
-                                Ban User
-                            </Button>) : (<Button variant="contained" onClick={async () => {
-                                await axios.patch(`http://localhost:5000/users/unban/${question.user.id}`);
-                                alert("User Unbanned Successfully");
-                            }}>
-                                Unban User
-                            </Button>)
-                            }
-                        </div>
+                            {/* ---------------- BAN / UNBAN ---------------- */}
+                            <Button
+                                sx={{ mt: 2 }}
+                                variant="contained"
+                                color={
+                                    question.user.isBanned ? "success" : "error"
+                                }
+                                onClick={() => toggleBanUser(question.user)}
+                            >
+                                {question.user.isBanned
+                                    ? "Unban User"
+                                    : "Ban User"}
+                            </Button>
+                        </Box>
                     </Box>
                 ))
             ) : (
-                <Typography>No public questions</Typography>
+                <Typography>No questions found</Typography>
             )}
 
-            <Stack
-                direction="row"
-                spacing={2}
-                sx={{ marginTop: 3 }}
-            >
+            {/* ---------------- PAGINATION ---------------- */}
+            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
                 <Button
                     disabled={currentPage === 1}
-                    onClick={() =>
-                        setCurrentPage((p) => p - 1)
-                    }
+                    onClick={() => setCurrentPage((p) => p - 1)}
                 >
                     Previous
                 </Button>
@@ -187,16 +263,11 @@ export default function Home() {
 
                 <Button
                     disabled={currentPage === totalPages}
-                    onClick={() =>
-                        setCurrentPage((p) => p + 1)
-                    }
+                    onClick={() => setCurrentPage((p) => p + 1)}
                 >
                     Next
                 </Button>
             </Stack>
-
-
-
         </>
     );
 }

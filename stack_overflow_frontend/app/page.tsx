@@ -23,10 +23,8 @@ import Link from "next/link";
 import { signOut } from "firebase/auth";
 import { auth } from "@/firebase/firebase";
 import AnswerList from "./components/answerList";
-import { FaHome } from "react-icons/fa";
-import { FaQuestionCircle } from "react-icons/fa";
-import { MdPublishedWithChanges } from "react-icons/md";
-import { MdDrafts } from "react-icons/md";
+import { FaHome, FaQuestionCircle } from "react-icons/fa";
+import { MdPublishedWithChanges, MdDrafts } from "react-icons/md";
 import axios from "axios";
 import "./home.css";
 
@@ -42,16 +40,19 @@ export default function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
 
+  /* -------------------- TAGS -------------------- */
   useEffect(() => {
     axios.get("http://localhost:5000/tags").then((res: any) => {
       setTagOptions(res.data.map((t: any) => t.name));
     });
   }, []);
 
+  /* -------------------- QUESTIONS -------------------- */
   useEffect(() => {
     dispatch(fetchQuestionsThunk());
   }, [dispatch]);
 
+  /* -------------------- LOGOUT -------------------- */
   const handleLogout = async () => {
     if (user?.authType !== "custom") {
       await signOut(auth);
@@ -60,6 +61,7 @@ export default function Home() {
     router.push("/login");
   };
 
+  /* -------------------- PAGINATION -------------------- */
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 5;
   const totalPages = Math.ceil(questions.length / questionsPerPage);
@@ -69,11 +71,12 @@ export default function Home() {
     startIndex + questionsPerPage
   );
 
+
+
   return (
     <>
-      <Box className="navbar" 
-      // sx={{display: 'flex', justifyContent: 'space-between'}}
-      >
+      {/* -------------------- NAVBAR -------------------- */}
+      <Box className="navbar">
         <Box className="logo" onClick={() => router.push("/")}>
           <img
             src="https://www.logo.wine/a/logo/Stack_Overflow/Stack_Overflow-Logo.wine.svg"
@@ -159,47 +162,44 @@ export default function Home() {
         </Box>
       </Box>
 
+      {/* -------------------- LAYOUT -------------------- */}
       <Box className="main-layout">
         <Box className="sidebar">
-          <Typography className="sidebar-item" style={{marginBottom:"15px" ,marginTop:"15px"}}>
+          <Typography className="sidebar-item" sx={{ my: 2 }}>
             <FaHome /> Home
           </Typography>
 
-          <Typography className="sidebar-item" style={{marginBottom:"15px"}}>
+          <Typography className="sidebar-item" sx={{ mb: 2 }}>
             <FaQuestionCircle /> Questions
           </Typography>
 
           <Typography
-          style={{marginBottom:"15px"}}
             className="sidebar-item"
+            sx={{ mb: 2 }}
             onClick={() => router.push("/my-questions")}
           >
             <MdPublishedWithChanges /> Published
           </Typography>
 
           <Typography
-          style={{marginBottom:"15px"}}
             className="sidebar-item"
+            sx={{ mb: 2 }}
             onClick={() => router.push("/my-drafts")}
           >
             <MdDrafts /> Draft
           </Typography>
         </Box>
 
+        {/* -------------------- CONTENT -------------------- */}
         <Box className="content">
           <Box className="content-header">
-            <Typography variant="h5">
-              Latest Questions
-            </Typography>
+            <Typography variant="h5">Latest Questions</Typography>
 
             <Button
               variant="contained"
               onClick={() => {
-                if (user) {
-                  setOpen(true);
-                } else {
-                  router.push("/login");
-                }
+                if (user) setOpen(true);
+                else router.push("/login");
               }}
             >
               Ask Question
@@ -208,13 +208,21 @@ export default function Home() {
 
           {currentQuestions.length ? (
             currentQuestions.map((question: any) => (
-              <Box
-                key={question.id}
-                className="question-card"
-              >
-                <Link style={{textDecoration:"none"}} href={`/questions/${question.id}`}>
+              <Box key={question.id} className="question-card">
+                <Link
+                  style={{ textDecoration: "none" }}
+                  href={`/questions/${question.id}`}
+                >
                   <h3>{question.title}</h3>
                 </Link>
+
+                {/* VERIFIED BADGE */}
+                {question.acceptedAnswer && (
+                  <Typography sx={{ color: "green", fontWeight: "bold" }}>
+                    ✔ Verified
+                  </Typography>
+                )}
+
 
                 <div
                   dangerouslySetInnerHTML={{
@@ -235,26 +243,25 @@ export default function Home() {
                   ))}
                 </p>
 
-                <AnswerList
-                  questionId={question.id}
-                  userId={user?.id}
-                />
+          <AnswerList
+  questionId={question.id}
+  userId={user?.id}
+   questionOwnerId={question.user?.id} 
+/>
+
+
+
               </Box>
             ))
           ) : (
             <Typography>No public questions</Typography>
           )}
 
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ marginTop: 3 }}
-          >
+          {/* -------------------- PAGINATION -------------------- */}
+          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
             <Button
               disabled={currentPage === 1}
-              onClick={() =>
-                setCurrentPage((p) => p - 1)
-              }
+              onClick={() => setCurrentPage((p) => p - 1)}
             >
               Previous
             </Button>
@@ -265,9 +272,7 @@ export default function Home() {
 
             <Button
               disabled={currentPage === totalPages}
-              onClick={() =>
-                setCurrentPage((p) => p + 1)
-              }
+              onClick={() => setCurrentPage((p) => p + 1)}
             >
               Next
             </Button>
@@ -275,10 +280,7 @@ export default function Home() {
         </Box>
       </Box>
 
-      <AskQuestionModal
-        open={open}
-        onClose={() => setOpen(false)}
-      />
+      <AskQuestionModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }

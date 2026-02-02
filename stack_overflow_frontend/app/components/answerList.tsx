@@ -2,59 +2,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import {
-  Box,
-  Button,
-  Stack,
-  Typography,
-  IconButton,
-  TextField,
-} from '@mui/material';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import { Box, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAppSelector } from '@/redux/hooks';
+import AnswerItem from './answerItem';
 
-export default function AnswerList({ questionId,
-  userId, }: {
-    questionId: number;
-    userId: number;
-  }) {
+interface Props {
+  questionId: number;
+  userId: number;
+  questionOwnerId: number;
+}
+
+export default function AnswerList({
+  questionId,
+  userId,
+  questionOwnerId,
+}: Props) {
   const { user } = useAppSelector((s: any) => s.auth);
-
   const [answers, setAnswers] = useState<any[]>([]);
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
-  const [replyTexts, setReplyTexts] = useState<Record<number, string>>({});
-  // const [success, setSuccess] = useState<boolean>()
 
-
-
-  // const markValid = async() => {
-  //    const res = await axios.patch(`http://localhost:5000/answers/${questionId}/validate`)
-
-  //    if(res){
-  //        console.log(res.data)
-  //     setSuccess(true)
-  //    }
-  //    else{
-  //     alert(`Answer for question ${questionId} cannot be changed`)
-  //    }
-
-  // }
-
-
-  // const markInValid = async() => {
-  //    const res = await axios.patch(`http://localhost:5000/answers/${questionId}/inValidate`)
-  //    if(res){
-  //        console.log(res.data)
-  //     setSuccess(false)}
-  //     else{
-  //         alert(`Answer for question ${questionId} cannot be changed`)
-  //     }
-  // }
-
-  const refreshAnswers = async () => {
+  const fetchAnswers = async () => {
     const res = await axios.get(
       `http://localhost:5000/answers/question/${questionId}?userId=${userId}`
     );
@@ -62,209 +30,25 @@ export default function AnswerList({ questionId,
   };
 
   useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      if (!questionId) return;
-      const res = await axios.get(
-        `http://localhost:5000/answers/question/${questionId}?userId=${userId}`
-      );
-      if (!cancelled) setAnswers(res.data);
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [questionId, user?.id]);
-
-  const handleVote = async (answerId: number, value: number) => {
-    if (!user) {
-      alert('Login required');
-      return;
-    }
-
-    await axios.post('http://localhost:5000/votes', {
-      answerId,
-      userId: user.id,
-      value,
-    });
-
-    refreshAnswers();
-  };
-
-  const submitReply = async (parentAnswerId: number) => {
-    if (!user) {
-      alert('Login required');
-      return;
-    }
-
-    await axios.post('http://localhost:5000/answers', {
-      text: replyTexts[parentAnswerId],
-      questionId,
-      userId: user.id,
-      parentAnswerId,
-    });
-
-    setReplyTexts((prev) => ({ ...prev, [parentAnswerId]: '' }));
-    setReplyingTo(null);
-    refreshAnswers();
-  };
+    if (questionId) fetchAnswers();
+  }, [questionId]);
 
   return (
     <Box sx={{ mt: 2 }}>
-      {answers.length === 0 && <Typography>No answers yet</Typography>}
+      {answers.length === 0 && (
+        <Typography>No answers yet</Typography>
+      )}
 
       {answers.map((answer) => (
-        <Box
+        <AnswerItem
           key={answer.id}
-          sx={{
-            p: 2,
-            mb: 2,
-            borderLeft: '4px solid blue',
-            background: '#fafafa',
-          }}
-        >
-          <Box>
-            <div dangerouslySetInnerHTML={{ __html: answer.answer }} />
-
-            {/* {success?(
-                        <Button variant="contained" color="error" sx={{mt:3 , mb:3 ,size:"small"}} onClick={()=>{
-            markInValid()
-          }}>
-            Mark It Invalid
-          </Button>
-            ): (
-          <Button variant="contained" color="success" sx={{mt:3 , mb:3 ,size:"small"}} onClick={()=>{
-            markValid()
-          }}>
-            Mark Valid
-          </Button>
-            )} */}
-
-          </Box>
-
-          <Stack direction="row" spacing={1} alignItems="center">
-            <IconButton
-              onClick={() => handleVote(answer.id, 1)}
-              color={answer.myVote === 1 ? 'primary' : 'default'}
-            >
-              <ThumbUpIcon />
-            </IconButton>
-
-            <IconButton
-              onClick={() => handleVote(answer.id, -1)}
-              color={answer.myVote === -1 ? 'error' : 'default'}
-            >
-              <ThumbDownIcon />
-            </IconButton>
-
-            <Button
-              size="small"
-              onClick={() =>
-                setReplyingTo(replyingTo === answer.id ? null : answer.id)
-              }
-            >
-              Reply
-            </Button>
-          </Stack>
-
-          {replyingTo === answer.id && (
-            <Box sx={{ mt: 1, ml: 3 }}>
-              <TextField
-                fullWidth
-                size="small"
-                multiline
-                rows={3}
-                value={replyTexts[answer.id] ?? ''}
-                onChange={(e) =>
-                  setReplyTexts((prev) => ({
-                    ...prev,
-                    [answer.id]: e.target.value,
-                  }))
-                }
-                placeholder="Write a reply..."
-              />
-
-              <Button
-                size="small"
-                sx={{ mt: 1 }}
-                onClick={() => submitReply(answer.id)}
-                disabled={!replyTexts[answer.id]?.trim()}
-              >
-                Submit Reply
-              </Button>
-            </Box>
-          )}
-
-
-          {(answer.replies ?? []).map((reply: any) => (
-            <Box
-              key={reply.id}
-              sx={{
-                mt: 1,
-                ml: 4,
-                p: 1,
-                borderLeft: '2px solid silver',
-                background: 'white',
-              }}
-            >
-              <Button
-                size="small"
-                onClick={() =>
-                  setReplyingTo(replyingTo === reply.id ? null : reply.id)
-                }
-              >
-                Reply
-              </Button>
-              <div dangerouslySetInnerHTML={{ __html: reply.answer }} />
-              {replyingTo === reply.id && (
-                <Box sx={{ mt: 1, ml: 3 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    multiline
-                    rows={3}
-                    value={replyTexts[reply.id] ?? ''}
-                    onChange={(e) =>
-                      setReplyTexts((prev) => ({
-                        ...prev,
-                        [reply.id]: e.target.value,
-                      }))
-                    }
-                    placeholder="Write a reply..."
-                  />
-
-                  <Button
-                    size="small"
-                    sx={{ mt: 1 }}
-                    onClick={() => submitReply(reply.id)}
-                    disabled={!replyTexts[reply.id]?.trim()}
-                  >
-                    Submit Reply
-                  </Button>
-                </Box>
-              )}
-              <Stack direction="row" spacing={1}>
-                <IconButton
-                  size="small"
-                  onClick={() => handleVote(reply.id, 1)}
-                  color={reply.myVote === 1 ? 'primary' : 'default'}
-                >
-                  <ThumbUpIcon fontSize="small" />
-                </IconButton>
-
-                <IconButton
-                  size="small"
-                  onClick={() => handleVote(reply.id, -1)}
-                  color={reply.myVote === -1 ? 'error' : 'default'}
-                >
-                  <ThumbDownIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-            </Box>
-          ))}
-        </Box>
+          answer={answer}
+          questionId={questionId}
+          questionOwnerId={questionOwnerId}
+          currentUser={user}
+          refresh={fetchAnswers}
+          level={0}
+        />
       ))}
     </Box>
   );
