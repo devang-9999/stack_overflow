@@ -18,18 +18,19 @@ export class Question {
   @Column()
   description: string;
 
-@Column({
-  default: "published"
-})
-status: "draft" | "published";
+  @Column({
+    default: "published"
+  })
+  status: "draft" | "published";
 
-  @ManyToOne(() => Users, (user)=>user.questions, {
-    cascade:['insert'],
-    onDelete : "CASCADE"})
+  @ManyToOne(() => Users, (user) => user.questions, {
+    cascade: ['insert'],
+    onDelete: "CASCADE"
+  })
   user: Users;
 
- @ManyToMany(() => Tag, (tag) => tag.questions, {
-    cascade: ['insert'], 
+  @ManyToMany(() => Tag, (tag) => tag.questions, {
+    cascade: ['insert'],
   })
   @JoinTable()
   tags: Tag[];

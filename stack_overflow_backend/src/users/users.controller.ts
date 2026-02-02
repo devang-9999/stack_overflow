@@ -39,4 +39,14 @@ export class UsersController {
   removeById(@Param("id") id:number){
     return this.usersService.removeById(id)
   }
+
+  @Patch("ban/:id")
+  banUser(@Param("id") id:number){
+    return this.usersService.banUser(id)
+  }
+
+  @Patch("unban/:id")
+  unbanUser(@Param("id") id:number){
+    return this.usersService.unbanUser(id)
+  }
 }

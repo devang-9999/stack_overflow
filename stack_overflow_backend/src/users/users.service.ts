@@ -31,6 +31,7 @@ export class UsersService {
       where: {
         email: email,
         password: password,
+        isBanned: false
       },
     });
 
@@ -71,6 +72,24 @@ export class UsersService {
       throw new NotFoundException("User not found")
     }
     return await this.usersRepository.remove(User)
+  }
+
+    async banUser(id: number) {
+    const user = await this.usersRepository.findOneBy({ id: id });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    user.isBanned = true;
+    return this.usersRepository.save(user);
+  }
+
+  async unbanUser(id: number) {
+    const user = await this.usersRepository.findOneBy({ id: id });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    user.isBanned = false;
+    return this.usersRepository.save(user);
   }
 
 }

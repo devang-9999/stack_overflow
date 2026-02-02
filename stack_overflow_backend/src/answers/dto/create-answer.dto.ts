@@ -5,7 +5,6 @@ export class CreateAnswerDto {
   @IsString()
   text: string;
 
-
   @IsInt()
   userId: number;
 
@@ -15,5 +14,7 @@ export class CreateAnswerDto {
   @IsOptional()
   @IsInt()
   parentAnswerId?: number;
+
+
 
 }

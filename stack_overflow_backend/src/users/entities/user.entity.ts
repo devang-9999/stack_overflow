@@ -27,6 +27,8 @@ export class Users {
   @UpdateDateColumn()
   updatedAt:Date;
 
+  @Column({ default: 'false' })
+  isBanned: boolean;
 //  @OneToMany(() => Vote, (vote) => vote.user)
 //  votes: Vote[];
 

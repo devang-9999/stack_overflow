@@ -42,6 +42,11 @@ getByQuestion(
   
   @Patch(':id/validate')
   markAsValid(@Param('id', ParseIntPipe) id: number) {
-    return this.answerService.markAsValid(id);
+    return this.answerService.markAsValid(+id);
+  }
+
+    @Patch(':id/inValidate')
+  markAsInValid(@Param('id', ParseIntPipe) id: number) {
+    return this.answerService.markAsInValid(+id);
   }
 }
