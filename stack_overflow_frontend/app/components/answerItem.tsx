@@ -37,7 +37,6 @@ export default function AnswerItem({
 
   const isOwner = currentUser?.id === questionOwnerId;
 
-  /* ---------------- VOTE ---------------- */
   const handleVote = async (value: number) => {
     if (!currentUser) {
       alert('Login required');
@@ -53,7 +52,6 @@ export default function AnswerItem({
     refresh(); // 🔥 reload answers so color updates
   };
 
-  /* ---------------- VERIFY ---------------- */
   const toggleVerify = async () => {
     await axios.patch(
       `http://localhost:5000/answers/${answer.id}/toggle-verify`,
@@ -62,7 +60,6 @@ export default function AnswerItem({
     refresh();
   };
 
-  /* ---------------- REPLY ---------------- */
   const submitReply = async () => {
     if (!currentUser) {
       alert('Login required');
@@ -94,7 +91,6 @@ export default function AnswerItem({
         borderRadius: 1,
       }}
     >
-      {/* VERIFIED BADGE */}
       {answer.isValid && (
         <Stack direction="row" spacing={1} alignItems="center">
           <CheckCircleIcon color="success" />
@@ -104,12 +100,10 @@ export default function AnswerItem({
         </Stack>
       )}
 
-      {/* ANSWER BODY */}
       <Box sx={{ mt: 1 }}>
         <div dangerouslySetInnerHTML={{ __html: answer.answer }} />
       </Box>
 
-      {/* VERIFY / UNVERIFY (QUESTION OWNER ONLY) */}
       {isOwner && (
         <Button
           size="small"
@@ -121,7 +115,6 @@ export default function AnswerItem({
         </Button>
       )}
 
-      {/* ACTIONS */}
       <Stack direction="row" spacing={1} alignItems="center">
         <IconButton
           onClick={() => handleVote(1)}
@@ -149,7 +142,6 @@ export default function AnswerItem({
 </Typography>
       </Stack>
 
-      {/* REPLY INPUT */}
       {replying && (
         <Box sx={{ mt: 1 }}>
           <TextField
@@ -172,7 +164,6 @@ export default function AnswerItem({
         </Box>
       )}
 
-      {/* NESTED REPLIES (RECURSIVE) */}
       {(answer.replies ?? []).map((child: any) => (
         <AnswerItem
           key={child.id}

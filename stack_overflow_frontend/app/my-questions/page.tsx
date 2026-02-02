@@ -17,7 +17,6 @@ export default function MyQuestionsPage() {
   const user = useAppSelector((s: any) => s.auth.user);
   const { userPublished } = useAppSelector((s: any) => s.question);
 
-  /* -------------------- FETCH USER QUESTIONS -------------------- */
   useEffect(() => {
     if (user?.id) {
       dispatch(fetchUserPublishedThunk(user.id));
@@ -47,7 +46,6 @@ export default function MyQuestionsPage() {
               borderRadius: 1,
             }}
           >
-            {/* TITLE */}
             <Link href={`/questions/${q.id}`} style={{ textDecoration: "none" }}>
               <Typography
                 variant="h6"
@@ -57,7 +55,6 @@ export default function MyQuestionsPage() {
               </Typography>
             </Link>
 
-            {/* VERIFIED BADGE */}
             {q.acceptedAnswer && (
               <Typography
                 sx={{
@@ -70,7 +67,6 @@ export default function MyQuestionsPage() {
               </Typography>
             )}
 
-            {/* DESCRIPTION */}
             <Box sx={{ mt: 1 }}>
               <div
                 dangerouslySetInnerHTML={{
@@ -79,7 +75,6 @@ export default function MyQuestionsPage() {
               />
             </Box>
 
-            {/* ACTIONS */}
             <Box sx={{ mt: 2 }}>
               <Button
                 variant="outlined"

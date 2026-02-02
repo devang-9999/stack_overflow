@@ -40,19 +40,16 @@ export default function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
 
-  /* -------------------- TAGS -------------------- */
   useEffect(() => {
     axios.get("http://localhost:5000/tags").then((res: any) => {
       setTagOptions(res.data.map((t: any) => t.name));
     });
   }, []);
 
-  /* -------------------- QUESTIONS -------------------- */
   useEffect(() => {
     dispatch(fetchQuestionsThunk());
   }, [dispatch]);
 
-  /* -------------------- LOGOUT -------------------- */
   const handleLogout = async () => {
     if (user?.authType !== "custom") {
       await signOut(auth);
@@ -61,7 +58,6 @@ export default function Home() {
     router.push("/login");
   };
 
-  /* -------------------- PAGINATION -------------------- */
   const [currentPage, setCurrentPage] = useState(1);
   const questionsPerPage = 5;
   const totalPages = Math.ceil(questions.length / questionsPerPage);
@@ -75,7 +71,6 @@ export default function Home() {
 
   return (
     <>
-      {/* -------------------- NAVBAR -------------------- */}
       <Box className="navbar">
         <Box className="logo" onClick={() => router.push("/")}>
           <img
@@ -162,7 +157,6 @@ export default function Home() {
         </Box>
       </Box>
 
-      {/* -------------------- LAYOUT -------------------- */}
       <Box className="main-layout">
         <Box className="sidebar">
           <Typography className="sidebar-item" sx={{ my: 2 }}>
@@ -190,7 +184,6 @@ export default function Home() {
           </Typography>
         </Box>
 
-        {/* -------------------- CONTENT -------------------- */}
         <Box className="content">
           <Box className="content-header">
             <Typography variant="h5">Latest Questions</Typography>
@@ -216,7 +209,6 @@ export default function Home() {
                   <h3>{question.title}</h3>
                 </Link>
 
-                {/* VERIFIED BADGE */}
                 {question.acceptedAnswer && (
                   <Typography sx={{ color: "green", fontWeight: "bold" }}>
                     ✔ Verified
@@ -257,7 +249,6 @@ export default function Home() {
             <Typography>No public questions</Typography>
           )}
 
-          {/* -------------------- PAGINATION -------------------- */}
           <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
             <Button
               disabled={currentPage === 1}
