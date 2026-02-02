@@ -24,7 +24,6 @@ export class AnswerService {
     private readonly questionsRepository: Repository<Question>,
   ) {}
 
-  /* ---------------- CREATE ANSWER / REPLY ---------------- */
   async create(createAnswerDto: CreateAnswerDto) {
     const { text, questionId, userId, parentAnswerId } = createAnswerDto;
 
@@ -60,7 +59,6 @@ export class AnswerService {
     };
   }
 
-  /* ---------------- GET ANSWERS WITH NESTED REPLIES ---------------- */
   async getAnswersByQuestion(questionId: number, userId: number) {
     const answers = await this.answersRepository.find({
       where: {
