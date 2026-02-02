@@ -15,7 +15,7 @@ export class UsersService {
     private readonly usersRepository: Repository<Users>
   ) { }
 
-   signUp(createUserDto: SignUp) {
+  signUp(createUserDto: SignUp) {
     const SignUpUser = this.usersRepository.create(createUserDto)
     return this.usersRepository.save(SignUpUser)
   }

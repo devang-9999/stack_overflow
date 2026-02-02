@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class SignUp {
 
@@ -8,8 +8,13 @@ export class SignUp {
   @IsNotEmpty({ message: 'Email cannot be empty' })
   readonly email: string;
 
+  @IsOptional()
   @IsString({ message: 'Password must be a string' })
-  @IsNotEmpty({ message: 'Password cannot be empty' })
   readonly password: string;
+
+
+  @IsOptional()
+  @IsString()
+  provider:string;
 
 }

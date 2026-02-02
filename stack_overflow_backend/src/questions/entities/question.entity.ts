@@ -18,6 +18,11 @@ export class Question {
   @Column()
   description: string;
 
+@Column({
+  default: "published"
+})
+status: "draft" | "published";
+
   @ManyToOne(() => Users, (user)=>user.questions, {
     cascade:['insert'],
     onDelete : "CASCADE"})

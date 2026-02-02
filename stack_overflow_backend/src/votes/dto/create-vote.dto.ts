@@ -1,14 +1,12 @@
-/* eslint-disable prettier/prettier */
-import { IsBoolean, IsInt } from "class-validator";
+import { IsInt, IsIn } from 'class-validator';
 
 export class CreateVoteDto {
+  @IsInt()
+  answerId: number;
 
-    @IsInt()
-    answerId:number;
-    
-    @IsInt()
-    userId:number;
+  @IsInt()
+  userId: number;
 
-    @IsBoolean()
-    status:boolean;
+  @IsIn([1, -1])
+  value: number;
 }

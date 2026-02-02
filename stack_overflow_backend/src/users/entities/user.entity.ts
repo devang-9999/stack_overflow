@@ -12,8 +12,11 @@ export class Users {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
+
+  @Column({ nullable: true })
+  provider: string;
 
   @OneToMany(() => Question, (question) => question.user)
   questions: Question[];
@@ -23,5 +26,8 @@ export class Users {
 
   @UpdateDateColumn()
   updatedAt:Date;
+
+//  @OneToMany(() => Vote, (vote) => vote.user)
+//  votes: Vote[];
 
 }

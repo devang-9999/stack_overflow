@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { IsArray, IsString, ArrayMinSize, IsInt, IsOptional } from 'class-validator';
+import { IsArray, IsString, ArrayMinSize, IsInt, IsIn, IsOptional } from 'class-validator';
 
 export class CreateQuestionDto {
   @IsString()
@@ -19,4 +19,9 @@ export class CreateQuestionDto {
   @IsOptional()
   @IsInt()
   userId: number;
+
+  @IsOptional()
+  @IsIn(["draft", "published"])
+  status?: "draft" | "published";
+
 }

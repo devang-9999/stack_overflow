@@ -1,26 +1,61 @@
-import { Injectable } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Vote } from './entities/vote.entity';
+import { Answers } from 'src/answers/entities/answer.entity';
 import { CreateVoteDto } from './dto/create-vote.dto';
-import { UpdateVoteDto } from './dto/update-vote.dto';
 
 @Injectable()
 export class VotesService {
-  create(createVoteDto: CreateVoteDto) {
-    return 'This action adds a new vote';
-  }
+  constructor(
+    @InjectRepository(Vote)
+    private voteRepo: Repository<Vote>,
 
-  findAll() {
-    return `This action returns all votes`;
-  }
+    @InjectRepository(Answers)
+    private answerRepo: Repository<Answers>,
+  ) {}
 
-  findOne(id: number) {
-    return `This action returns a #${id} vote`;
-  }
+  async vote(createVoteDto: CreateVoteDto) {
+    const { answerId, userId, value } = createVoteDto;
 
-  update(id: number, updateVoteDto: UpdateVoteDto) {
-    return `This action updates a #${id} vote`;
-  }
+    const answer = await this.answerRepo.findOne({
+      where: { id: answerId },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} vote`;
+    if (!answer) throw new NotFoundException('Answer not found');
+
+    const existingVote = await this.voteRepo.findOne({
+      where: { userId, answer: { id: answerId } },
+      relations: ['answer'],
+    });
+
+
+    if (existingVote && existingVote.value === value) {
+      await this.voteRepo.remove(existingVote);
+      console.log("vote removed")
+      return { message: 'Vote removed' };
+    }
+
+    try {
+    if (existingVote) {
+      existingVote.value = value;
+      await this.voteRepo.save(existingVote);
+      return { message: 'Vote updated' };
+    }
+} catch (error) {
+  throw new BadRequestException(error,'You already voted');
+}
+
+    // Here it will check whether the vote is new or not
+    const vote = this.voteRepo.create({
+      userId,
+      value,
+      answer,
+    });
+
+    await this.voteRepo.save(vote);
+    console.log("Vote Added")
+    return { message: 'Vote added' };
   }
 }

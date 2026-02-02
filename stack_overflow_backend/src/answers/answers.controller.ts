@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 
 
@@ -23,13 +24,15 @@ export class AnswerController {
     return this.answerService.create(createAnswerDto);
   }
 
-  
-  @Get('question/:questionId')
-  getByQuestion(
-    @Param('questionId', ParseIntPipe) questionId: number,
-  ) {
-    return this.answerService.getAnswersByQuestion(questionId);
-  }
+ 
+@Get('question/:questionId')
+getByQuestion(
+  @Param('questionId', ParseIntPipe) questionId: number,
+  @Query('userId', ParseIntPipe) userId: number,
+) {
+  return this.answerService.getAnswersByQuestion(questionId, userId);
+}
+
 
   @Get(':id')
   getOne(@Param('id', ParseIntPipe) id: number) {
