@@ -14,54 +14,56 @@ export interface LoginPayload {
 }
 
 export interface User {
+  uid?: string;
   id: number;
   email: string;
+  authType: "custom" | "firebase" | null;
 }
 
 interface AuthState {
   loading: boolean;
   error: string | null;
   user: User | null;
-}
 
+}
 
 const initialState: AuthState = {
   loading: false,
   error: null,
-  user:
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("user") || "null")
-      : null,
+  user: null,
 };
 
 const API_URL = "http://localhost:5000";
 
-
-export const signupThunk = createAsyncThunk("auth/signup", async (data :SignupPayload, { rejectWithValue }) => {
-  try {
-    const res = await axios.post(`${API_URL}/users/signup`, data);
-    return res.data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data?.message || "Signup failed");
+export const signupThunk = createAsyncThunk(
+  "auth/signup",
+  async (data: SignupPayload, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(`${API_URL}/users/signup`, data);
+      return res.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data?.message);
+      }
+      return rejectWithValue("Signup failed");
     }
-    return rejectWithValue("Signup failed");
   }
-});
+);
 
-
-export const loginThunk = createAsyncThunk("auth/login", async (data:LoginPayload, { rejectWithValue }) => {
-  try {
-    const res = await axios.post(`${API_URL}/users/login`, data);
-    return res.data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      return rejectWithValue(error.response?.data?.message || "Login failed");
+export const loginThunk = createAsyncThunk(
+  "auth/login",
+  async (data: LoginPayload, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(`${API_URL}/users/login`, data);
+      return res.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data?.message);
+      }
+      return rejectWithValue("Login failed");
     }
-    return rejectWithValue("Login failed");
   }
-});
-
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -70,41 +72,40 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.error = null;
-      localStorage.removeItem("user");
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.error = null;
+    },
+    clearUser: (state) => {
+      state.user = null;
     },
   },
   extraReducers: (builder) => {
     builder
- 
-      .addCase(signupThunk.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(signupThunk.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-        localStorage.setItem("user", JSON.stringify(action.payload));
-      })
-      .addCase(signupThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.error = (action.payload as string) || "Signup failed";
-      })
-
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(loginThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
-        localStorage.setItem("user", JSON.stringify(action.payload));
+        state.user = {
+          ...action.payload,
+          authType: "custom",
+        };
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = (action.payload as string) || "Login failed";
+        state.error = action.payload as string;
+      })
+      .addCase(signupThunk.fulfilled, (state, action) => {
+        state.user = {
+          ...action.payload,
+          authType: "custom",
+        };
       });
+
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, clearUser, setUser } = authSlice.actions;
 export default authSlice.reducer;

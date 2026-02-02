@@ -1,8 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { redirect, useRouter } from "next/navigation";
+import {  useRouter } from "next/navigation";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -30,7 +31,7 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, gitProvider, provider } from "../../firebase/firebase";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { loginThunk } from "../../redux/authSlice";
+import { loginThunk, setUser } from "../../redux/authSlice";
 
 import "./login.css";
 
@@ -67,31 +68,44 @@ export default function Login() {
        password: data.password,
     }));
   };
-
+  
   const handleGoogleSignUp = async () => {
-    try {
-      await signInWithPopup(auth, provider);
+  try {
+    const res = await signInWithPopup(auth, provider);
+          alert("User Logged in successfully");
+
+    dispatch(setUser({
+      uid:res.user.uid,
+      email: res.user.email,
+      authType: "firebase",
+    }));
+
+         setTimeout(() => {
+        router.push("/");
+      }, 300);
+  } catch {
+    alert("Google sign in failed");
+  }
+};
+
+const handleGithubSignUp = async () => {
+  try {
+    const res = await signInWithPopup(auth, gitProvider);
       alert("User Logged in successfully");
-      setTimeout(() => redirect("/"), 500)
+    
+    dispatch(setUser({
+       uid:res.user.uid,
+      email: res.user.email,
+      authType: "firebase",
+    }));
 
-    }
-    catch {
-      alert("Google sign in failed")
-    }
-  };
-
-  const handleGithubSignUp = async () => {
-    try {
-      await signInWithPopup(auth, gitProvider);
-      alert("User Logged in successfully");
-      setTimeout(() => redirect("/"), 500)
-
-    }
-    catch {
-      alert("Github sign up failed")
-    }
-  };
-
+         setTimeout(() => {
+        router.push("/");
+      }, 300);
+  } catch {
+    alert("GitHub sign in failed");
+  }
+};
 
   useEffect(() => {
     if (error) {
@@ -103,7 +117,7 @@ export default function Login() {
       setSnackbarOpen(true);
       reset();
       setTimeout(() => {
-        redirect("/");
+        router.push("/");
       }, 300);
     }
   }, [error, user, reset, router]);

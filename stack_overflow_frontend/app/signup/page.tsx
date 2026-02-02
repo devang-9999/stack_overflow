@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -30,9 +31,10 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, provider, gitProvider } from "../../firebase/firebase";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { signupThunk } from "../../redux/authSlice";
+import { setUser, signupThunk } from "../../redux/authSlice";
 
 import "./signup.css";
+import axios from "axios";
 
 
 const RegisterSchema = z.object({
@@ -68,29 +70,64 @@ export default function Register() {
       password:data.password
     }));
   };
-  const handleGoogleSignUp = async () => {
-    try {
-      await signInWithPopup(auth, provider);
-      alert("User Logged in successfully");
-      setTimeout(() => redirect("/login"), 500)
 
-    }
-    catch {
-      alert("Google sign in failed")
-    }
-  };
+const handleGoogleSignUp = async () => {
+  try {
+    const res = await signInWithPopup(auth, provider);
+    console.log(res)
+    const email = res.user.email;
 
-  const handleGithubSignUp = async () => {
-    try {
-      await signInWithPopup(auth, gitProvider);
-      alert("User Logged in successfully");
-      setTimeout(() => redirect("/login"), 500)
+    await axios.post("http://localhost:5000/users/signup", {
+      email,
+      provider: "google"
+    });
 
+    
+    setSnackbarOpen(true);
+
+    setTimeout(() => {
+      router.push("/login");
+    }, 300);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    if (axios.isAxiosError(err)) {
+      alert(err?.message || "Axios auth failed");
+    } else {
+      alert(err?.message || "Google auth failed");
     }
-    catch {
-      alert("Github sign up failed")
-    }
-  };
+  }
+};
+
+
+const handleGithubSignUp = async () => {
+    console.log("GitHub button clicked");
+  try {
+    const res = await signInWithPopup(auth, gitProvider);
+    console.log("SUCCESS:", res.user)
+    const email = res.user.email;
+
+   await axios.post("http://localhost:5000/users/signup", {
+      email,
+      provider: "github"
+    });
+
+
+    setSnackbarOpen(true);
+
+    setTimeout(() => {
+      router.push("/login");
+    }, 300);
+
+
+  }
+   catch (err: any) {
+  console.error("GitHub signup error:", err);
+  alert(err?.message || "GitHub auth failed");
+}
+
+};
+
 
   useEffect(() => {
     if (error) {
@@ -103,7 +140,7 @@ export default function Register() {
       reset();
       setTimeout(() => {
         router.push("/login");
-      }, 800);
+      }, 300);
     }
   }, [error, user, reset, router]);
 
@@ -120,7 +157,7 @@ export default function Register() {
           fullWidth
           variant="contained"
           sx={{ mt: 3, mb: 2, backgroundColor: "white", color: "black" }}
-          onClick={handleGoogleSignUp}
+          onClick={()=>{handleGoogleSignUp()}}
         >
           <FcGoogle style={{ fontSize: 24, marginRight: 10 }} />
           Sign up with Google
@@ -130,7 +167,7 @@ export default function Register() {
           fullWidth
           variant="contained"
           sx={{ mb: 2, backgroundColor: "black" }}
-          onClick={handleGithubSignUp}
+          onClick={()=>{handleGithubSignUp()}}
         >
           <FaGithub style={{ fontSize: 24, marginRight: 10 }} />
           Sign up with GitHub

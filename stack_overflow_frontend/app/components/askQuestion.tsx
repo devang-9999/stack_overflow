@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -6,6 +7,7 @@ import {
   Typography,
   TextField,
   Button,
+  Autocomplete,
 } from "@mui/material";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
@@ -21,13 +23,34 @@ import {
   MenuSelectHeading,
   RichTextEditor,
 } from "mui-tiptap";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+const stripHtml = (html: string) =>
+  html.replace(/<[^>]*>/g, "").trim();
+
 
 const questionSchema = z.object({
-  title: z.string().max(55, "Title must be at least 10 characters"),
-  description: z.string().max(2000, "Description can have 2000 characters"),
-  type: z.string().min(1, "Type is required"),
-  tags: z.string().min(1, "Add at least one tag"),
+  title: z
+    .string()
+    .min(10, "Title must be at least 10 characters")
+    .max(55, "Title cannot exceed 55 characters"),
 
+  description: z
+  .string()
+  .refine(
+    (val) => stripHtml(val).length <= 2000,
+    "Description can have max 2000 characters"
+  )
+  .refine(
+    (val) => stripHtml(val).length > 0,
+    "Description cannot be empty"
+  ),
+
+
+  type: z.string().min(1, "Type is required"),
+
+  tags: z.array(z.string()).min(1, "Add at least one tag"),
 });
 
 type QuestionFormData = z.infer<typeof questionSchema>;
@@ -40,8 +63,26 @@ export default function AskQuestionModal({
   onClose: () => void;
 }) {
   const dispatch = useAppDispatch();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const user= useAppSelector((state:any) => state.auth.user);
+  const user = useAppSelector((state: any) => state.auth.user);
+
+  const [tagOptions, setTagOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+
+const fetchTags = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/tags");
+
+    const names = res.data.map((tag: any) => tag.name);
+
+    setTagOptions(names);
+  } catch (err) {
+    console.error("Failed to load tags", err);
+  }
+};
+
+    fetchTags();
+  }, []);
 
   const {
     register,
@@ -51,17 +92,22 @@ export default function AskQuestionModal({
     control,
   } = useForm<QuestionFormData>({
     resolver: zodResolver(questionSchema),
+    defaultValues: {
+      tags: [],
+      description: "",
+    },
   });
 
   const onSubmit = (data: QuestionFormData) => {
-    console.log(user)
+    if (!user) return;
+
     dispatch(
       addQuestionThunk({
         title: data.title,
         description: data.description,
         type: data.type,
-        tags: data.tags.split(",").map((t) => t.trim()),
-        userId:user.id
+        tags: data.tags,
+        userId: user.id,
       })
     );
 
@@ -88,6 +134,7 @@ export default function AskQuestionModal({
         </Typography>
 
         <form onSubmit={handleSubmit(onSubmit)}>
+      
           <TextField
             fullWidth
             label="Title"
@@ -97,70 +144,83 @@ export default function AskQuestionModal({
             helperText={errors.title?.message}
           />
 
-{/* <TextField
-  fullWidth
-  multiline
-  rows={4}
-  label="Description"
-  margin="normal"
-  {...register("description")}
-  error={!!errors.description}
-  helperText={errors.description?.message}
-/> */}
-<Controller
-  name="description"
-  control={control}
-  render={({ field: { onChange, value }, fieldState: { error } }) => (
-    <RichTextEditor
-      sx={{ 
-        mt: 2, 
-        mb: 2,
-        border: error ? "1px solid red" : "inherit"
-      }}
-      immediatelyRender={false}
-      extensions={[StarterKit]}
-      content={value || "<p></p>"}
-      onUpdate={({ editor }) => onChange(editor.getHTML())}
-      renderControls={() => (
-        <MenuControlsContainer>
-          <MenuSelectHeading />
-          <MenuDivider />
-          <MenuButtonBold />
-          <MenuButtonItalic />
-        </MenuControlsContainer>
-      )}
-    />
-  )}
-/>
+          <Controller
+            name="description"
+            control={control}
+            render={({ field: { onChange, value }, fieldState }) => (
+              <RichTextEditor
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  border: fieldState.error
+                    ? "1px solid red"
+                    : "1px solid #ddd",
+                }}
+                immediatelyRender={false}
+                extensions={[StarterKit]}
+                content={value || "<p></p>"}
+                onUpdate={({ editor }) =>
+                  onChange(editor.getHTML())
+                }
+                renderControls={() => (
+                  <MenuControlsContainer>
+                    <MenuSelectHeading />
+                    <MenuDivider />
+                    <MenuButtonBold />
+                    <MenuButtonItalic />
+                  </MenuControlsContainer>
+                )}
+              />
+            )}
+          />
 
-<TextField
-  fullWidth
-  label="Type (e.g. backend, frontend)"
-  margin="normal"
-  {...register("type")}
-  error={!!errors.type}
-  helperText={errors.type?.message}
-/>
+  
+          <TextField
+            fullWidth
+            label="Type (e.g. backend, frontend)"
+            margin="normal"
+            {...register("type")}
+            error={!!errors.type}
+            helperText={errors.type?.message}
+          />
 
-<TextField
-  fullWidth
-  label="Tags (comma separated)"
-  margin="normal"
-  {...register("tags")}
-  error={!!errors.tags}
-  helperText={errors.tags?.message}
-/>
+   
+          <Controller
+            name="tags"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                {...field}
+                multiple
+                freeSolo
+                options={tagOptions}
+                onChange={(_, value) => field.onChange(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Tags"
+                    placeholder="Type or select tags"
+                    margin="normal"
+                    error={!!errors.tags}
+                    helperText={errors.tags?.message}
+                  />
+                )}
+              />
+            )}
+          />
 
-<Button
-  type="submit"
-  variant="contained"
-  fullWidth
-  sx={{ mt: 2 }}
->
-  Post Question
-</Button>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ mt: 2 }}
+          >
+            Post Question
+          </Button>
         </form>
       </Box>
     </Modal>
   );
 }
+
+
