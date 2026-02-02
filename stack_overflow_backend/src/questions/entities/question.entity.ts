@@ -2,7 +2,7 @@
 import { Answers } from "src/answers/entities/answer.entity";
 import { Tag } from "src/tags/entities/tag.entity";
 import { Users } from "src/users/entities/user.entity";
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany, JoinColumn } from "typeorm";
 
 @Entity("Questions")
 export class Question {
@@ -14,6 +14,9 @@ export class Question {
 
   @Column()
   title: string;
+
+    @Column()
+  userId: number;
 
   @Column()
   description: string;
@@ -37,5 +40,10 @@ export class Question {
 
   @OneToMany(() => Answers, (answers) => answers.question)
   answers: Answers[];
+
+@ManyToOne(() => Answers, { nullable: true })
+@JoinColumn({ name: 'acceptedAnswerId' })
+acceptedAnswer: Answers | null;
+
 }
 

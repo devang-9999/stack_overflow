@@ -74,22 +74,27 @@ export class UsersService {
     return await this.usersRepository.remove(User)
   }
 
-    async banUser(id: number) {
-    const user = await this.usersRepository.findOneBy({ id: id });
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
+ async banUser(userId: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
     user.isBanned = true;
     return this.usersRepository.save(user);
   }
 
-  async unbanUser(id: number) {
-    const user = await this.usersRepository.findOneBy({ id: id });
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
+  async unbanUser(userId: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
     user.isBanned = false;
     return this.usersRepository.save(user);
   }
+
 
 }

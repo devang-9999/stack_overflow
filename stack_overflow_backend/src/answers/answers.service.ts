@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable prettier/prettier */
 
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,9 +22,9 @@ export class AnswerService {
 
     @InjectRepository(Question)
     private readonly questionsRepository: Repository<Question>,
-  ) { }
+  ) {}
 
-
+  /* ---------------- CREATE ANSWER / REPLY ---------------- */
   async create(createAnswerDto: CreateAnswerDto) {
     const { text, questionId, userId, parentAnswerId } = createAnswerDto;
 
@@ -29,9 +32,7 @@ export class AnswerService {
       where: { id: questionId },
     });
 
-    if (!question) {
-      throw new NotFoundException('Question not found');
-    }
+    if (!question) throw new NotFoundException('Question not found');
 
     let parentAnswer: Answers | null = null;
 
@@ -39,25 +40,8 @@ export class AnswerService {
       parentAnswer = await this.answersRepository.findOne({
         where: { id: parentAnswerId },
       });
-
       if (!parentAnswer) {
         throw new NotFoundException('Parent answer not found');
-      }
-    }
-
-    if (!parentAnswerId) {
-      const existingAnswer = await this.answersRepository.findOne({
-        where: {
-          userId,
-          question: { id: questionId },
-          parentAnswer: IsNull(),
-        },
-      });
-
-      if (existingAnswer) {
-        existingAnswer.answer = text;
-        await this.answersRepository.save(existingAnswer);
-        return { message: 'Answer updated', answerId: existingAnswer.id };
       }
     }
 
@@ -76,80 +60,170 @@ export class AnswerService {
     };
   }
 
-
+  /* ---------------- GET ANSWERS WITH NESTED REPLIES ---------------- */
   async getAnswersByQuestion(questionId: number, userId: number) {
     const answers = await this.answersRepository.find({
       where: {
         question: { id: questionId },
         parentAnswer: IsNull(),
+        isDeleted: false,
       },
-      relations: [
-        'votes',
-        'replies',
-        'replies.votes',
-      ],
-      order: {
-        createdAt: 'DESC',
-        replies: {
-          createdAt: 'ASC',
-        },
-      },
+      relations: ['votes'],
+      order: { createdAt: 'DESC' },
     });
 
-    return answers.map((answer) => ({
-      id: answer.id,
-      answer: answer.answer,
-      userId: answer.userId,
-      createdAt: answer.createdAt,
-      myVote:
-        answer.votes.find((v) => v.userId === userId)?.value ?? 0,
+    const result: any[] = [];
 
-      replies: answer.replies.map((reply) => ({
-        id: reply.id,
-        answer: reply.answer,
-        userId: reply.userId,
-        createdAt: reply.createdAt,
-        myVote:
-          reply.votes.find((v) => v.userId === userId)?.value ?? 0,
-      })),
-    }));
+   for (const answer of answers) {
+  const upVotes = answer.votes.filter(v => v.value === 1).length;
+  const downVotes = answer.votes.filter(v => v.value === -1).length;
+
+  result.push({
+    id: answer.id,
+    answer: answer.answer,
+    userId: answer.userId,
+    createdAt: answer.createdAt,
+    isDeleted: answer.isDeleted,
+    isValid: answer.isValid,
+    myVote:
+      answer.votes.find(v => v.userId === userId)?.value ?? 0,
+    upVotes,
+    downVotes,
+    score: upVotes - downVotes,   // ⭐ THIS IS THE TOTAL SCORE
+    replies: await this.loadReplies(answer.id, userId),
+  });
+}
+
+
+    return result;
   }
 
+  
+  /* ---------------- RECURSIVE REPLIES ---------------- */
+  private async loadReplies(answerId: number, userId: number) {
+    const replies = await this.answersRepository.find({
+      where: {
+        parentAnswer: { id: answerId },
+        isDeleted: false,
+      },
+      relations: ['votes'],
+      order: { createdAt: 'ASC' },
+    });
+
+    const result: any[] = [];
+
+ for (const reply of replies) {
+  const upVotes = reply.votes.filter(v => v.value === 1).length;
+  const downVotes = reply.votes.filter(v => v.value === -1).length;
+
+  result.push({
+    id: reply.id,
+    answer: reply.answer,
+    userId: reply.userId,
+    createdAt: reply.createdAt,
+    isDeleted: reply.isDeleted,
+    isValid: reply.isValid,
+    myVote:
+      reply.votes.find(v => v.userId === userId)?.value ?? 0,
+    upVotes,
+    downVotes,
+    score: upVotes - downVotes,
+    replies: await this.loadReplies(reply.id, userId),
+  });
+}
 
 
-  async getAnswerById(id: number) {
+    return result;
+  }
+
+  /* ---------------- VERIFY / UNVERIFY ANSWER ---------------- */
+  async toggleValid(answerId: number, userId: number) {
     const answer = await this.answersRepository.findOne({
-      where: { id },
+      where: { id: answerId },
       relations: ['question'],
     });
 
-    if (!answer) {
-      throw new NotFoundException('Answer not found');
+    if (!answer) throw new NotFoundException('Answer not found');
+
+    // ONLY question owner
+    if (answer.question.userId !== userId) {
+      throw new ForbiddenException('Not allowed');
     }
 
-    return answer;
+    if (answer.isValid) {
+      answer.isValid = false;
+      answer.question.acceptedAnswer = null;
+    } else {
+      await this.answersRepository.update(
+        { question: { id: answer.question.id } },
+        { isValid: false },
+      );
+
+      answer.isValid = true;
+      answer.question.acceptedAnswer = answer;
+    }
+
+    await this.answersRepository.save(answer);
+    await this.questionsRepository.save(answer.question);
+
+    return { message: 'Answer verification toggled' };
   }
 
+  /* ---------------- ADMIN: SOFT DELETE / RESTORE ANSWER ---------------- */
+  async adminToggleDelete(answerId: number) {
+    const answer = await this.answersRepository.findOne({
+      where: { id: answerId },
+    });
 
-  async markAsValid(id: number) {
-    const answer = await this.getAnswerById(id);
+    if (!answer) throw new NotFoundException('Answer not found');
 
-    answer.isValid = true;
+    answer.isDeleted = !answer.isDeleted;
     await this.answersRepository.save(answer);
 
     return {
-      message: 'Answer marked as valid',
-    };
-
-  }
-  async markAsInValid(id: number) {
-    const answer = await this.getAnswerById(id);
-
-    answer.isValid = false
-    await this.answersRepository.save(answer);
-
-    return {
-      message: 'Answer marked as InValid',
+      message: answer.isDeleted
+        ? 'Answer soft deleted'
+        : 'Answer restored',
     };
   }
+
+   async getAnswersByQuestionAdmin(questionId: number) {
+    const answers = await this.answersRepository.find({
+      where: {
+        question: { id: questionId },
+        parentAnswer: IsNull(),
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    return Promise.all(
+      answers.map(async (answer) => ({
+        id: answer.id,
+        answer: answer.answer,
+        userId: answer.userId,
+        isDeleted: answer.isDeleted,
+        replies: await this.loadRepliesAdmin(answer.id),
+      }))
+    );
+  }
+
+  private async loadRepliesAdmin(answerId: number) {
+    const replies = await this.answersRepository.find({
+      where: {
+        parentAnswer: { id: answerId },
+      },
+      order: { createdAt: 'ASC' },
+    });
+
+    return Promise.all(
+      replies.map(async (reply) => ({
+        id: reply.id,
+        answer: reply.answer,
+        userId: reply.userId,
+        isDeleted: reply.isDeleted,
+        replies: await this.loadRepliesAdmin(reply.id),
+      }))
+    );
+  }
+
 }

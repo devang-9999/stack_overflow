@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { SignUp } from './dto/signup.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -40,13 +40,13 @@ export class UsersController {
     return this.usersService.removeById(id)
   }
 
-  @Patch("ban/:id")
-  banUser(@Param("id") id:number){
-    return this.usersService.banUser(id)
+  @Patch('ban/:id')
+  ban(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.banUser(id);
   }
 
-  @Patch("unban/:id")
-  unbanUser(@Param("id") id:number){
-    return this.usersService.unbanUser(id)
+  @Patch('unban/:id')
+  unban(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.unbanUser(id);
   }
 }

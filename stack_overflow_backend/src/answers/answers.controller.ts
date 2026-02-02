@@ -9,8 +9,6 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-
-
 import { CreateAnswerDto } from './dto/create-answer.dto';
 import { AnswerService } from './answers.service';
 
@@ -18,35 +16,38 @@ import { AnswerService } from './answers.service';
 export class AnswerController {
   constructor(private readonly answerService: AnswerService) {}
 
-
   @Post()
-  create(@Body() createAnswerDto: CreateAnswerDto) {
-    return this.answerService.create(createAnswerDto);
+  create(@Body() dto: CreateAnswerDto) {
+    return this.answerService.create(dto);
   }
 
- 
-@Get('question/:questionId')
-getByQuestion(
-  @Param('questionId', ParseIntPipe) questionId: number,
-  @Query('userId', ParseIntPipe) userId: number,
-) {
-  return this.answerService.getAnswersByQuestion(questionId, userId);
-}
-
-
-  @Get(':id')
-  getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.answerService.getAnswerById(id);
+  @Get('question/:questionId')
+  getByQuestion(
+    @Param('questionId', ParseIntPipe) questionId: number,
+    @Query('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.answerService.getAnswersByQuestion(questionId, userId);
   }
 
-  
-  @Patch(':id/validate')
-  markAsValid(@Param('id', ParseIntPipe) id: number) {
-    return this.answerService.markAsValid(+id);
+    @Get('admin/question/:questionId')
+  getByQuestionAdmin(
+    @Param('questionId', ParseIntPipe) questionId: number,
+  ) {
+    return this.answerService.getAnswersByQuestionAdmin(questionId);
   }
 
-    @Patch(':id/inValidate')
-  markAsInValid(@Param('id', ParseIntPipe) id: number) {
-    return this.answerService.markAsInValid(+id);
+
+  @Patch(':id/toggle-verify')
+  toggleVerify(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { userId: number },
+  ) {
+    return this.answerService.toggleValid(id, body.userId);
+  }
+
+  /* -------- ADMIN -------- */
+  @Patch(':id/admin-toggle-delete')
+  adminToggleDelete(@Param('id', ParseIntPipe) id: number) {
+    return this.answerService.adminToggleDelete(id);
   }
 }

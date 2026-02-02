@@ -43,6 +43,7 @@ export class QuestionsService {
       status: status ?? "published",
       user: { id: userId },
       tags: allTags,
+      userId: userId,
       
     });
 
@@ -63,10 +64,14 @@ export class QuestionsService {
 // }
 
 async findAll(search?: string, tags: string[] = []) {
-  
   let questions = await this.questionsRepository.find({
     where: { status: 'published' },
-    relations: ['user', 'tags'],
+    relations: [
+      'acceptedAnswer',
+      'tags',
+      'user',
+      'answers',       
+    ],
     order: { id: 'DESC' },
   });
 
@@ -85,6 +90,7 @@ async findAll(search?: string, tags: string[] = []) {
 
   return questions;
 }
+
 
 
 
@@ -126,10 +132,11 @@ async getUserDrafts(userId: number) {
 async getUserPublished(userId: number) {
   return this.questionsRepository.find({
     where: {
-      user: { id: userId },
+      // user: { id: userId },
+       userId: userId,
       status: "published",
     },
-    relations: ['tags'],
+    relations: ['tags','acceptedAnswer'],
     order: { id: 'DESC' },
   });
 }

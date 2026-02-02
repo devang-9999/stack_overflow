@@ -48,13 +48,18 @@ export class Answers {
   @OneToMany(() => Vote, (vote) => vote.answer)
   votes: Vote[];
 
-  @ManyToOne(() => Answers, (a) => a.replies, {
-    nullable: true,
-    onDelete: 'CASCADE',
-  })
-  parentAnswer: Answers | null;
+@ManyToOne(() => Answers, (a) => a.replies, {
+  nullable: true,
+  onDelete: 'CASCADE',
+})
+parentAnswer: Answers | null;
 
-  @OneToMany(() => Answers, (a) => a.parentAnswer)
-  replies: Answers[];
+@OneToMany(() => Answers, (a) => a.parentAnswer)
+replies: Answers[];
+
+@Column({ default: false })
+isDeleted: boolean;
+
+
 
 }
