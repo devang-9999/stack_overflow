@@ -97,7 +97,6 @@ export class AnswerService {
   }
 
   
-  /* ---------------- RECURSIVE REPLIES ---------------- */
   private async loadReplies(answerId: number, userId: number) {
     const replies = await this.answersRepository.find({
       where: {
@@ -134,7 +133,6 @@ export class AnswerService {
     return result;
   }
 
-  /* ---------------- VERIFY / UNVERIFY ANSWER ---------------- */
   async toggleValid(answerId: number, userId: number) {
     const answer = await this.answersRepository.findOne({
       where: { id: answerId },
@@ -167,7 +165,6 @@ export class AnswerService {
     return { message: 'Answer verification toggled' };
   }
 
-  /* ---------------- ADMIN: SOFT DELETE / RESTORE ANSWER ---------------- */
   async adminToggleDelete(answerId: number) {
     const answer = await this.answersRepository.findOne({
       where: { id: answerId },
