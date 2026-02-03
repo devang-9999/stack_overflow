@@ -87,7 +87,7 @@ export class AnswerService {
       answer.votes.find(v => v.userId === userId)?.value ?? 0,
     upVotes,
     downVotes,
-    score: upVotes - downVotes,   // ⭐ THIS IS THE TOTAL SCORE
+    score: upVotes - downVotes,   
     replies: await this.loadReplies(answer.id, userId),
   });
 }

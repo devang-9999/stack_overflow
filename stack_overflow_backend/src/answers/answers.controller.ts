@@ -45,7 +45,6 @@ export class AnswerController {
     return this.answerService.toggleValid(id, body.userId);
   }
 
-  /* -------- ADMIN -------- */
   @Patch(':id/admin-toggle-delete')
   adminToggleDelete(@Param('id', ParseIntPipe) id: number) {
     return this.answerService.adminToggleDelete(id);
