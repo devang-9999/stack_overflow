@@ -49,7 +49,7 @@ export default function AnswerItem({
       value,
     });
 
-    refresh(); // 🔥 reload answers so color updates
+    refresh(); 
   };
 
   const toggleVerify = async () => {
