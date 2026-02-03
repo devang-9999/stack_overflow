@@ -122,7 +122,7 @@ export default function AnswerItem({
         >
           <ThumbUpIcon />
         </IconButton>
-        <Typography fontWeight="bold">👍 {answer.upVotes}</Typography>
+        <Typography fontWeight="bold"> {answer.upVotes}</Typography>
 
         <IconButton
           onClick={() => handleVote(-1)}
@@ -130,7 +130,7 @@ export default function AnswerItem({
         >
           <ThumbDownIcon />
         </IconButton>
-        <Typography fontWeight="bold">👎 {answer.downVotes}</Typography>
+        <Typography fontWeight="bold"> {answer.downVotes}</Typography>
 
 
         <Button size="small" onClick={() => setReplying(!replying)}>
